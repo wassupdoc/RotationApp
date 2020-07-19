@@ -7,9 +7,16 @@
 
 import UIKit
 import SwiftUI
+import Combine
+
+class Orientation: ObservableObject {
+	@Published var isLandScape:Bool = false
+}
+
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
+	var orientation = Orientation()
 	var window: UIWindow?
 
 
@@ -24,10 +31,17 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 		// Use a UIHostingController as window root view controller.
 		if let windowScene = scene as? UIWindowScene {
 		    let window = UIWindow(windowScene: windowScene)
-		    window.rootViewController = UIHostingController(rootView: contentView)
+		    window.rootViewController = UIHostingController(rootView: contentView
+																.environmentObject(orientation)
+			)
+
 		    self.window = window
 		    window.makeKeyAndVisible()
 		}
+	}
+
+	func windowScene(_ windowScene: UIWindowScene, didUpdate previousCoordinateSpace: UICoordinateSpace, interfaceOrientation previousInterfaceOrientation: UIInterfaceOrientation, traitCollection previousTraitCollection: UITraitCollection) {
+		orientation.isLandScape = windowScene.interfaceOrientation.isLandscape
 	}
 
 	func sceneDidDisconnect(_ scene: UIScene) {
