@@ -62,6 +62,7 @@ struct ContentView: View {
 	}
 
 	struct TabBarView: View {
+		@EnvironmentObject var orientation:Orientation
 		@Binding var isShowingSettingsView:Bool
 
 		var settingsButton:some View{
@@ -73,6 +74,7 @@ struct ContentView: View {
 			}.sheet(isPresented: $isShowingSettingsView)
 			{
 				SettingsView(isPresented: $isShowingSettingsView)
+					.environmentObject(orientation)
 			}
 		}
 
@@ -88,11 +90,29 @@ struct ContentView: View {
 
 	struct SettingsView: View {
 		@Binding var isPresented: Bool
+		@EnvironmentObject var orientation:Orientation
+		//@Environment(\.presentationMode) var presentationMode
 
 		var doneButton: some View {
 			Button("Done"){
 				isPresented = false
 				//presentationMode.wrappedValue.dismiss()
+			}
+		}
+
+		struct NavBarOrientationModifier: ViewModifier {
+			@Binding var isPresented:Bool
+			@EnvironmentObject var orientation:Orientation
+
+			func body(content: Content) -> some View {
+				if orientation.isLandScape{
+					return content
+						.navigationBarHidden(true)
+				} else {
+					return content
+						.navigationBarHidden(false)
+
+				}
 			}
 		}
 
@@ -104,6 +124,7 @@ struct ContentView: View {
 				}
 				.navigationBarTitle(Text("Settings"))//, displayMode: .inline)
 				.navigationBarItems(trailing: doneButton)
+				.modifier(NavBarOrientationModifier(isPresented: $isPresented))
 			}
 
 		}
