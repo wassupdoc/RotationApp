@@ -32,8 +32,8 @@ struct ContentView: View {
 		var body: some View {
 			NavigationView {
 				VStack {
-					TopView(isShowingSettingsView: $isShowingSettingsView)
 					DetailView()
+					TopView(isShowingSettingsView: $isShowingSettingsView)
 				}
 				.navigationBarTitle("Rotation Test")
 			}
@@ -57,7 +57,21 @@ struct ContentView: View {
 
 	struct DetailView: View {
 		var body: some View {
-			Text("Detail").padding()
+			VStack{
+				List {
+					Section() {
+						Text("List 1")
+						Text("List 2")
+					}
+				}
+				.listStyle(GroupedListStyle())
+				.navigationBarTitle(Text("Details"))
+				.font(.headline)
+				.environment(\.horizontalSizeClass, .regular)
+			}
+			.onAppear(){
+				UITableView.appearance().bounces = false
+			}
 		}
 	}
 
