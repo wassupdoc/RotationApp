@@ -7,11 +7,6 @@
 
 import UIKit
 import SwiftUI
-import Combine
-
-class Orientation: ObservableObject {
-	@Published var isLandScape:Bool = false
-}
 
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {

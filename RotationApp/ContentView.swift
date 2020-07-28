@@ -6,34 +6,63 @@
 //
 
 import SwiftUI
+import Combine
+
+class Orientation: ObservableObject {
+	//input
+	@Published var isLandScape:Bool = false
+	@Published var isModalOpen:Bool = false
+
+	//output
+	@Published var filteredLandscape:Bool = false
+
+	private var cancellableSet: Set<AnyCancellable> = []
+
+	private var filteredOrientation: AnyPublisher<Bool, Never> {
+		$isLandScape//.CombineLatest($isLandScape, $isModalOpen)
+			.filter { _ in !self.isModalOpen }
+			.removeDuplicates()
+			.eraseToAnyPublisher()
+	}
+
+	init() {
+		filteredOrientation
+			.receive(on: RunLoop.main)
+			.assign(to: \.filteredLandscape, on: self)
+			.store(in: &cancellableSet)
+	}
+}
+
 
 struct ContentView: View {
 
 	@EnvironmentObject var orientation:Orientation
-	@State var isShowingSettingsView:Bool = false
+//	@State var isShowingSettingsView:Bool = false
 
-	func AdjustedOrientation()->Bool{
-		if self.isShowingSettingsView{
-			return false
-		}
-		return orientation.isLandScape
-	}
+//	func AdjustedOrientation()->Bool{
+//		if self.isShowingSettingsView{
+//			return false
+//		}
+//		return orientation.filteredLandscape
+//	}
 
 	var body: some View {
-		if AdjustedOrientation() {
+		if orientation.filteredLandscape { //} AdjustedOrientation() {
 			LandscapeView()
 		} else {
-			MainView(isShowingSettingsView: $isShowingSettingsView)
+			MainView()//isShowingSettingsView: $isShowingSettingsView)
 		}
 	}
 
 	struct MainView: View {
-		@Binding var isShowingSettingsView:Bool
+//		@Binding var isShowingSettingsView:Bool
 		var body: some View {
 			NavigationView {
 				VStack {
+					EmptyView()
 					DetailView()
-					TopView(isShowingSettingsView: $isShowingSettingsView)
+					TopView()//isShowingSettingsView: $isShowingSettingsView)
+
 				}
 				.navigationBarTitle("Rotation Test")
 			}
@@ -41,10 +70,10 @@ struct ContentView: View {
 	}
 
 	struct TopView: View {
-		@Binding var isShowingSettingsView:Bool
+//		@Binding var isShowingSettingsView:Bool
 		var body: some View {
 			VStack() {
-				TabBarView(isShowingSettingsView: $isShowingSettingsView)
+				TabBarView()//isShowingSettingsView: $isShowingSettingsView)
 			}
 		}
 	}
@@ -77,17 +106,17 @@ struct ContentView: View {
 
 	struct TabBarView: View {
 		@EnvironmentObject var orientation:Orientation
-		@Binding var isShowingSettingsView:Bool
+//		@Binding var isShowingSettingsView:Bool
 
 		var settingsButton:some View{
 			Button(action: {
-				isShowingSettingsView = true
+				orientation.isModalOpen = true //isShowingSettingsView = true
 			}) {
 				Image(systemName: "slider.horizontal.3")
 					.font(Font.system(.title))
-			}.sheet(isPresented: $isShowingSettingsView)
+			}.sheet(isPresented: $orientation.isModalOpen)// $isShowingSettingsView)
 			{
-				SettingsView(isPresented: $isShowingSettingsView)
+				SettingsView()//isPresented: orientation.$isShowingSettingsView)
 					.environmentObject(orientation)
 			}
 		}
@@ -103,13 +132,13 @@ struct ContentView: View {
 	}
 
 	struct SettingsView: View {
-		@Binding var isPresented: Bool
+//		@Binding var isPresented: Bool
 		@EnvironmentObject var orientation:Orientation
 		//@Environment(\.presentationMode) var presentationMode
 
 		var doneButton: some View {
 			Button("Done"){
-				isPresented = false
+				orientation.isModalOpen = false// isPresented = false
 				//presentationMode.wrappedValue.dismiss()
 			}
 		}
@@ -119,7 +148,7 @@ struct ContentView: View {
 			@EnvironmentObject var orientation:Orientation
 
 			func body(content: Content) -> some View {
-				if orientation.isLandScape{
+				if orientation.filteredLandscape {
 					return content
 						.navigationBarHidden(true)
 				} else {
@@ -138,7 +167,7 @@ struct ContentView: View {
 				}
 				.navigationBarTitle(Text("Settings"))//, displayMode: .inline)
 				.navigationBarItems(trailing: doneButton)
-				.modifier(NavBarOrientationModifier(isPresented: $isPresented))
+				.modifier(NavBarOrientationModifier(isPresented: $orientation.isModalOpen))// $isPresented))
 			}
 
 		}
